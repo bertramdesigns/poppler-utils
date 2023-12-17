@@ -1,1 +1,6 @@
 /target
+Cargo.lock
+
+# Poppler build files
+# Leaving empty roots for reference
+/poppler-*/poppler-*/*

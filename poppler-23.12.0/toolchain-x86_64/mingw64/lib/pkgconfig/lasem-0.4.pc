@@ -1,0 +1,11 @@
+prefix=/mingw64
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: Lasem
+Description: SVG and MathML rendering library
+Version: 0.4.4
+Requires: glib-2.0 gobject-2.0 cairo >= 1.2 pangocairo libxml-2.0 gdk-pixbuf-2.0
+Libs: -L${libdir} -llasem-0.4
+Cflags: -I${includedir}/lasem-0.4
