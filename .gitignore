@@ -1,6 +1,7 @@
 /target
 Cargo.lock
+.DS_Store
 
 # Poppler build files
 # Leaving empty roots for reference
-/poppler-*/poppler-*/*
+/poppler-*/poppler*/*

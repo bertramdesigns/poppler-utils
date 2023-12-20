@@ -4,7 +4,7 @@
 	"name": "C++",
 	"build": {
 		"dockerfile": "Dockerfile"
-	}
+	},
 
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	// "features": {},
@@ -13,7 +13,7 @@
 	// "forwardPorts": [],
 
 	// Use 'postCreateCommand' to run commands after the container is created.
-	// "postCreateCommand": "gcc -v",
+	"postCreateCommand": "sudo apt-get update && sudo apt-get install -y automake libtool pkg-config libglib2.0-dev python-dev libgpg-error-dev libassuan-dev zlib1g-dev libbz2-dev texinfo autoconf libfreetype6-dev libfontconfig1-dev libopenjp2-7-dev libjpeg-dev libpng-dev libtiff-dev libcairo2-dev libboost-dev liblcms2-dev"
 
 	// Configure tool-specific properties.
 	// "customizations": {},

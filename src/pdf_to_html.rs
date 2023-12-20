@@ -1,7 +1,3 @@
-// scroll down to pdftocairo implementation
-// https://fasterthanli.me/series/dont-shell-out/part-2
-
-use std::os;
 // use camino::Utf8PathBuf;
 // use std::fs::File;
 use std::path::Path;
@@ -88,32 +84,42 @@ impl AsPath for &str {
 }
 
 #[allow(dead_code)]
-
 pub fn pdf_to_html<T: AsPath>(file_location: T, options: PdfToHtmlConfig) -> () {
     // get the proper executable for the current operating system (ELF, Mach-O, PE)
     let os = std::env::consts::OS;
 
     // determine which of 3 executable folders to use
     let path_to_executable = match os {
-        "windows" => "./poppler-win/bin/pdftohtml.exe",
-        "macos" => "./poppler-mac/bin/pdftohtml",
-        "ios" => "./poppler-mac/bin/pdftohtml",
-        _ => "./poppler-unix/bin/pdftohtml",
+        "windows" => "src/poppler/win/bin/pdftohtml.exe",
+        "macos" => "src/poppler/mac/bin/pdftohtml",
+        "ios" => "src/poppler/mac/bin/pdftohtml",
+        _ => "src/poppler/unix/bin/pdftohtml",
     };
 
     // get absolute path of this root directory
     let root = std::env::current_dir().unwrap();
-    let exe_path = root.join("./poppler-mac/bin/pdftohtml.exe".as_path());
+    let exe_path = root.join(path_to_executable.as_path());
 
     // TODO: if file_location is undefined and not a valid pdf file then error and return
-    let data = std::fs::read(&file_location.as_path());
+    //let data = std::fs::read(&file_location.as_path());
 
     let parsed_options = parse_options(&file_location.as_path(), &options);
 
     let mut handle = Command::new(exe_path);
-    handle.args(parsed_options);
+    //handle.args(parsed_options);
+    handle.arg("-h");
+    let result = handle.output();
 
-    // cleanup resources
+    if result.is_ok() {
+        let output = result.unwrap();
+        match String::from_utf8(output.stderr) {
+            Ok(stderr) => println!("Execution was successful: {}", stderr),
+            Err(e) => println!("Invalid UTF-8 sequence: {}", e),
+        }
+        println!("parsed_options: {:?}", parsed_options);
+    } else {
+        println!("error: {}", result.err().unwrap());
+    }
 }
 
 fn parse_options(file_location: &Path, options: &PdfToHtmlConfig) -> Vec<String> {
@@ -126,7 +132,7 @@ fn parse_options(file_location: &Path, options: &PdfToHtmlConfig) -> Vec<String>
             }
         };
     }
-
+    add_option!(file_location.exists(), file_location.to_str().unwrap());
     add_option!(
         options.first_page != 1,
         format!("-f {}", options.first_page)
@@ -158,6 +164,33 @@ fn parse_options(file_location: &Path, options: &PdfToHtmlConfig) -> Vec<String>
     add_option!(options.show_hidden, "-hidden");
     add_option!(options.no_merge, "-nomerge");
     add_option!(options.font_full_name, "-fontfullname");
+
+    // first_page: 1,
+    // last_page: 0,
+    // raw_order: true,
+    // print_commands: true,
+    // print_help: false,
+    // print_html: false,
+    // complex_mode: false,
+    // single_html: false,
+    // data_urls: false,
+    // ignore: false,
+    // extension: String::from("png"),
+    // scale: 1.5,
+    // no_frames: false,
+    // stout: false,
+    // xml: false,
+    // no_rounded_coordinates: false,
+    // err_quiet: false,
+    // no_drm: false,
+    // word_break_threshold: 0.1,
+    // show_hidden: false,
+    // no_merge: false,
+    // font_full_name: false,
+    // owner_password: String::new(),
+    // user_password: String::new(),
+    // print_version: false,
+    // text_enc_name: String::new(),
 
     parsed_options
 }

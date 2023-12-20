@@ -24,16 +24,18 @@ mod tests {
     use super::*;
 
     #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
-
-    #[test]
-    fn pdf_to_html() {
+    fn pdf_to_html_works() {
         let path: &str = "test.pdf";
         let config = pdf_to_html::PdfToHtmlConfig::default();
-        let result = pdf_to_html::pdf_to_html(path, config);
+        pdf_to_html::pdf_to_html(path, config);
         //assert_eq!(result, 4);
     }
+
+    // #[test]
+    // fn pdf_to_html() {
+    //     let path: &str = "test.pdf";
+    //     let config = pdf_to_html::PdfToHtmlConfig::default();
+    //     let result = pdf_to_html::pdf_to_html(path, config);
+    //     //assert_eq!(result, 4);
+    // }
 }

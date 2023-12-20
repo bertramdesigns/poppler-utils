@@ -10,22 +10,24 @@ You will also be able to find poppler-data on the same site. These are the encod
 Assumes the following folder structure:
 
 - poppler-utils-rs
+  - poppler-cmake-toolchains
+    - mac.cmake
+    - unix.cmake
+    - win.cmake
   - poppler-23.12.0
     - poppler-master
       - build-win
-        - toolchain.cmake
+      - build-test
       - build-mac
       - build-unix
     - poppler-data-0.4.12
-    - poppler-test
   - src
     - poppler
-      - data
       - mac
       - unix
       - win
 
-_**NOTE:** The poppler-test folder is not required for the build, but is useful for testing the library. It can be downloaded from the [Poppler repository](https://gitlab.freedesktop.org/poppler/test)._
+_**NOTE:** The poppler-test folder is not required for the build, but is useful for testing the library. It can be downloaded from the [Poppler repository](https://gitlab.freedesktop.org/poppler/test). Place the contents in poppler-master/build-test and run "make test"_
 
 ---
 
@@ -38,26 +40,17 @@ The library will need to have executables for all systems it may run on. This sh
 
 In general, the build process will look like this:
 
-1. [Build the poppler-data package](#build-the-poppler-data-package) into your source
+1. [Build the poppler-data package](#build-the-poppler-data-package)
 
-- Build for build-time
-- Build for runtime
+2. For the target system /build-{target}, cmake pointing to the correct toolchain file
 
-2. For the target system /build-{target}, cmake with args
+- `-DCMAKE_TOOLCHAIN_FILE=../../poppler-cmake-toolchains/{target}.cmake`
 
-- `-DENABLE_QT5=OFF`
-- `-DENABLE_QT6=OFF`
-- `-DENABLE_GLIB=OFF`
-- `-DENABLE_CPP=OFF`
-- `-DENABLE_UTILS=ON`
-- `-DENABLE_LIBCURL=OFF`
-- `-DENABLE_NSS3=OFF`
-- `-DPOPPLER_DATADIR=../data`
-- `-DTESTDATADIR=../../poppler-test`
-- `-DCMAKE_BUILD_TYPE=release`
+3. `Make`
 
-3. Make
-4. Make install
+- optional: `Make test`
+
+4. `Make install`
 
 The report for support should look like this:
 
@@ -93,7 +86,7 @@ Building Poppler with support for:
 
 The encoding files enables poppler to correctly render CJK and Cyrillic properly. You can find the source code download [here](https://poppler.freedesktop.org/).
 
-Because the the build is destined for a library, runtime and build-time directories will be different, but relative. As such, the package should be built in two places.
+You will build the data encoding files to your computer. The way CMakeLists.txt is written, it is not easy to override the path and ensure a proper include if it is in the source directory.
 
 ### for build-time
 
@@ -103,25 +96,15 @@ cd /path/to/root/poppler-23.12.0/poppler-data-0.4.12
 
 # Clean incase anything is left over from a previous build
 make clean
-rm -rf ../poppler-master/data
 
 # Install the data files in the source directory top level
-make install datadir=/ pkgdatadir=/ DESTDIR=../poppler-master/data
+#make install datadir=/ pkgdatadir=/poppler/ DESTDIR=../poppler-master/data
+
+make install
+
 ```
 
-### for runtime
-
-```bash
-# Navigate to the directory where you've downloaded the Poppler source code
-cd /path/to/root/poppler-23.12.0/poppler-data-0.4.12
-
-# Clean incase anything is left over from a previous build
-make clean
-rm -rf ../../src/poppler/data
-
-# Install the data files in the source directory top level
-make install datadir=/ pkgdatadir=/ DESTDIR=../../src/poppler/data
-```
+If you would like to remove these files, go to the install directory (usually /usr/local/share/poppler) and delete the files. The resulting files are not executables.
 
 ---
 
@@ -159,31 +142,6 @@ mkdir build-win
 cd build-win
 ```
 
-### 3. Add folders and toolchain.cmake
-
-Add toolchain.cmake in the build-win directory. The file should look like this:
-
-```bash
-# this one is important
-SET(CMAKE_SYSTEM_NAME Windows)
-# this one not so much
-SET(CMAKE_SYSTEM_VERSION 1)
-
-# specify the cross compiler
-SET(CMAKE_C_COMPILER x86_64-w64-mingw32-gcc)
-SET(CMAKE_CXX_COMPILER x86_64-w64-mingw32-g++)
-SET(CMAKE_RC_COMPILER x86_64-w64-mingw32-windres)
-
-# where is the target environment
-SET(CMAKE_FIND_ROOT_PATH  /usr/local/Cellar/mingw-w64/11.0.1/toolchain-x86_64/x86_64-w64-mingw32 )
-
-# search for programs in the build host directories
-SET(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
-# for libraries and headers in the target directories
-SET(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
-SET(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
-```
-
 ### 4. Configure the build
 
 ```bash
@@ -191,7 +149,7 @@ SET(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 make clean
 
 # Configure the build
-cmake .. -DENABLE_QT5=OFF -DENABLE_QT6=OFF -DENABLE_GLIB=OFF -DENABLE_CPP=OFF -DENABLE_UTILS=ON -DENABLE_LIBCURL=OFF -DENABLE_NSS3=OFF -DPOPPLER_DATADIR=../data -DTESTDATADIR=../../poppler-test -DCMAKE_INSTALL_PREFIX=/src/poppler/win -DCMAKE_BUILD_TYPE=release -DCMAKE_TOOLCHAIN_FILE=/toolchain.cmake
+cmake .. -DCMAKE_TOOLCHAIN_FILE=../../poppler-cmake-toolchains/win.cmake
 ```
 
 ### 5. Build and install the library:
@@ -237,8 +195,8 @@ cd build-mac
 make clean
 
 # Configure the build
-# No toolchain file needed
-cmake .. -DENABLE_QT5=OFF -DENABLE_QT6=OFF -DENABLE_GLIB=OFF -DENABLE_CPP=OFF -DENABLE_UTILS=ON -DENABLE_LIBCURL=OFF -DENABLE_NSS3=OFF -DPOPPLER_DATADIR=../data -DTESTDATADIR=../../poppler-test -DCMAKE_INSTALL_PREFIX=/src/poppler/mac -DCMAKE_BUILD_TYPE=release
+cmake .. -DCMAKE_TOOLCHAIN_FILE=../../poppler-cmake-toolchains/mac.cmake
+
 ```
 
 ### 3. Build and install the library:
@@ -246,11 +204,13 @@ cmake .. -DENABLE_QT5=OFF -DENABLE_QT6=OFF -DENABLE_GLIB=OFF -DENABLE_CPP=OFF -D
 ```bash
 
 # clean the existing install directory
-make clean
 rm -rf ../../../src/poppler/mac
 
 # Build the project
 make
+
+# Optional: Run the tests
+make test
 
 # Install the library to a specified location
 # Prefix is defined in DCMAKE_INSTALL_PREFIX
@@ -278,10 +238,9 @@ Startup the dev container:
 1. Open the root folder in vscode
 2. Click the blue button in the bottom left corner of vscode
 
-
-    - If you haven't built the container yet, select "New Dev Container"
-      - Choose C++ and Debian without additional features.
-    - If you have built the container, select "Reopen in Container"
+   - If you haven't built the container yet, select "New Dev Container"
+     - Choose C++ and Debian without additional features.
+   - If you have built the container, select "Reopen in Container"
 
 3. Make a place to do all the building
 
@@ -345,8 +304,8 @@ cd /path/to/root/poppler-23.12.0/poppler-master/build-unix
 make clean
 
 # Configure the build
-# No toolchain file needed
-cmake .. -DENABLE_QT5=OFF -DENABLE_QT6=OFF -DENABLE_GLIB=OFF -DENABLE_CPP=OFF -DENABLE_UTILS=ON -DENABLE_LIBCURL=OFF -DENABLE_NSS3=OFF -DPOPPLER_DATADIR=../data -DTESTDATADIR=../../poppler-test -DCMAKE_INSTALL_PREFIX=/src/poppler/unix -DCMAKE_BUILD_TYPE=release
+cmake .. -DCMAKE_TOOLCHAIN_FILE=../../poppler-cmake-toolchains/unix.cmake
+
 ```
 
 ### 3. Build and install the library:

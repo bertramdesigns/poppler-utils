@@ -14,6 +14,9 @@ Check out [Amos](fasterthanli.me) to see [documention](https://fasterthanli.me/s
 
 ## TODO
 
+- [ ] Unix Poppler compile
+- [ ] Windows Poppler compile
+
 - [ ] pdfattach
 - [ ] pdfdetach
 - [ ] pdffonts
