@@ -1,41 +1,89 @@
 // checklist before publishing
 // https://rust-lang.github.io/api-guidelines
 
-//  mod pdf_attach;
-//  mod pdf_detach;
-//  mod pdf_fonts;
-//  mod pdf_images;
-//  mod pdf_info;
-//  mod pdf_separate;
-//  mod pdf_sig;
-//  mod pdf_to_cairo;
-//  mod pdf_to_ppm;
-//  mod pdf_to_ps;
-//  mod pdf_to_text;
-mod pdf_to_html;
-//  mod pdf_unite;
-
-pub fn add(left: usize, right: usize) -> usize {
-    left + right
-}
+// pub mod pdf_attach;
+// pub mod pdf_detach;
+// pub mod pdf_fonts;
+// pub mod pdf_images;
+pub mod pdf_info;
+// pub mod pdf_separate;
+// pub mod pdf_sig;
+// pub mod pdf_to_cairo;
+// pub mod pdf_to_ppm;
+// pub mod pdf_to_ps;
+// pub mod pdf_to_text;
+pub mod pdf_to_html;
+// pub mod pdf_unite;
+pub(crate) mod utils;
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use crate::pdf_info::{pdf_info, PdfInfoConfig};
+    use crate::pdf_to_html::{pdf_to_html, PdfToHtmlConfig};
+    use crate::utils::AsPopplerPath;
+    use tokio::runtime::Builder;
+
+    // #[test]
+    // fn pdf_to_html_works() {
+    //     let file_path = "/test.pdf";
+    //     let file = file_path.as_poppler_path();
+    //     let config = pdf_to_html::PdfToHtmlConfig::default();
+    //     let _result = pdf_to_html::pdf_to_html(file, config);
+    //     //assert_eq!(result, 4);
+    // }
+
+    #[test]
+    fn pdf_info_works() {
+        run_test(async {
+            let mut file_path = std::env::current_dir().unwrap();
+            file_path.push("./src/test.pdf");
+            // println!("file_path: {:?}", file_path);
+
+            let file = file_path.as_poppler_path();
+            let config = PdfInfoConfig::default();
+            // config.print_help = true;
+
+            let _result = pdf_info(file, config).await;
+
+            //assert_eq!(1, 4);
+        })
+    }
 
     #[test]
     fn pdf_to_html_works() {
-        let path: &str = "test.pdf";
-        let config = pdf_to_html::PdfToHtmlConfig::default();
-        pdf_to_html::pdf_to_html(path, config);
-        //assert_eq!(result, 4);
+        run_test(async {
+            let mut file_path = std::env::current_dir().unwrap();
+            file_path.push("./src/test.pdf");
+            // println!("file_path: {:?}", file_path);
+
+            let file = file_path.as_poppler_path();
+            let config = PdfToHtmlConfig::default();
+            // config.print_help = true;
+
+            let _result = pdf_to_html(file, config).await;
+
+            //assert_eq!(1, 4);
+        })
     }
 
-    // #[test]
-    // fn pdf_to_html() {
-    //     let path: &str = "test.pdf";
-    //     let config = pdf_to_html::PdfToHtmlConfig::default();
-    //     let result = pdf_to_html::pdf_to_html(path, config);
-    //     //assert_eq!(result, 4);
-    // }
+    // TODO: simplify by using #[tokio::test] if no setup/teardown is needed in the future
+    // https://lik.ai/blog/async-setup-and-teardown-in-rust
+    fn run_test<T>(test: T) -> ()
+    where
+        T: std::future::Future + std::panic::UnwindSafe,
+    {
+        // setup();
+
+        let result = std::panic::catch_unwind(|| {
+            Builder::new_current_thread()
+                .enable_all()
+                .build()
+                .unwrap()
+                .block_on(test);
+        });
+
+        // teardown();
+
+        assert!(result.is_ok())
+    }
 }

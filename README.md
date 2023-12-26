@@ -2,9 +2,12 @@
 
 This is a std::process wrapper for the utilities in [Poppler](https://poppler.freedesktop.org/) PDF rendering library.
 
-This library uses the same general concept as [node-poppler](https://github.com/Fdawgs/node-poppler), writing an interface and including required .dll files.
+This library is build to align with Frazer Smith's [node-poppler](https://github.com/Fdawgs/node-poppler). The goal is to provide a Rust alternative to the node wrapper.
 
-Poppler version: 23.12.0
+**Poppler version: 23.12.0**
+The Poppler executables are compiled from source for Mach-O, ELF, and PE formats.
+Data encoding for CJK and Cyrillic is included.
+NSS signatures & Curl are currently not supported.
 
 ### For more complex needs:
 
@@ -36,9 +39,14 @@ Check out [Amos](fasterthanli.me) to see [documention](https://fasterthanli.me/s
 ### PDF to HTML
 
 ```rs
-let mut config = PdfToHtmlConfig::default();
-config.scale = 2;
-config.first_page = 1;
-config.last_page =  5,
-let result = PdfToHtml.convert(filename, config);
+    fn pdf_to_html() {
+        let file_path: &str = "test.pdf"; // can be Vec<u8>, &Path, PathBuf, &str, String
+        let file: PopplerFile = file_path.as_poppler_path(); // or as_poppler_buffer() for Vec<u8>
+
+        // Uses builder pattern to set options
+        let mut config = poppler_utils::PdfToHtmlConfig::default();
+        config.zoom = 1.5;
+
+        poppler_utils::pdf_to_html(file, config);
+    }
 ```

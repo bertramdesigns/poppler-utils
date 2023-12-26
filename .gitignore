@@ -5,3 +5,9 @@ Cargo.lock
 # Poppler build files
 # Leaving empty roots for reference
 /poppler-*/poppler*/*
+
+# placeholder files in todo-list
+/todo
+
+# reference files
+/node-poppler

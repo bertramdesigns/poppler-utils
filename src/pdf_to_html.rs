@@ -1,128 +1,81 @@
-// use camino::Utf8PathBuf;
-// use std::fs::File;
-use std::path::Path;
-use std::process::Command;
+use crate::utils::{run_program, PopplerFile};
+use std::future::Future;
 
-#[derive(Debug)]
-#[allow(dead_code)]
-pub struct PdfToHtmlConfig {
-    first_page: i32,
-    last_page: i32,
-    raw_order: bool,
-    print_commands: bool,
-    print_help: bool,
-    print_html: bool,
-    complex_mode: bool,
-    single_html: bool,
-    data_urls: bool,
-    ignore: bool,
-    extension: String,
-    scale: f64,
-    no_frames: bool,
-    stout: bool,
-    xml: bool,
-    no_rounded_coordinates: bool,
-    err_quiet: bool,
-    no_drm: bool,
-    word_break_threshold: f64,
-    show_hidden: bool,
-    no_merge: bool,
-    font_full_name: bool,
-    owner_password: String,
-    user_password: String,
-    print_version: bool,
-    text_enc_name: String,
+pub struct PdfToHtmlConfig<'a> {
+    output_path: &'a str,         // this package only
+    first_page_to_convert: i32,   // firstPage, -f
+    last_page_to_convert: i32,    // lastPage, -l
+    quiet: bool,                  // errQuiet, -q
+    raw_order: bool,              // rawOrder, -raw
+    print_commands: bool,         // printCommands, -c
+    print_help: bool,             // printHelp, -h
+    exchange_pdf_links: bool,     // printHtml, -p
+    complex_output: bool,         // complexMode, -c
+    single_page: bool,            // singleHtml, -s
+    data_urls: bool,              // dataUrls, -dataurls
+    ignore_images: bool,          // ignore, -i
+    no_frames: bool,              // noFrames, -noframes
+    stdout: bool,                 // stout, -stdout
+    zoom: f64,                    // scale, -zoom
+    xml_output: bool,             // xml, -xml
+    no_rounded_coordinates: bool, // noRoundedCoordinates, -noroundcoord
+    extract_hidden: bool,         // showHidden, -hidden
+    no_merge_paragraph: bool,     // noMerge, -nomerge
+    output_encoding: &'a str,     // textEncName, -enc
+    image_format: &'a str,        // extension, -fmt
+    print_version_info: bool,     // printVersion, -v
+    owner_password: &'a str,      // ownerPassword, -opw
+    user_password: &'a str,       // userPassword, -upw
+    no_drm: bool,                 // noDrm, -nodrm
+    word_break_threshold: f64,    // wordBreakThreshold, -wbt
+    font_full_name: bool,         // fontFullName, -fontfullname
 }
 
-impl Default for PdfToHtmlConfig {
+impl<'a> Default for PdfToHtmlConfig<'a> {
     fn default() -> Self {
         Self {
-            first_page: 1,
-            last_page: 0,
-            raw_order: true,
-            print_commands: true,
-            print_help: false,
-            print_html: false,
-            complex_mode: false,
-            single_html: false,
+            output_path: "", // directory to write files to
+            first_page_to_convert: 1,
+            last_page_to_convert: 0, // 0 means all pages
+            raw_order: true,         // not exposed in node-poppler
+            print_commands: true,    // not exposed in node-poppler
+            print_help: false,       // not exposed in node-poppler
+            quiet: false,
+            exchange_pdf_links: false, // swaps .pdf ending for .html
+            complex_output: false,     // true makes stdout false
+            single_page: false,
             data_urls: false,
-            ignore: false,
-            extension: String::from("png"),
-            scale: 1.5,
+            ignore_images: false,
             no_frames: false,
-            stout: false,
-            xml: false,
-            no_rounded_coordinates: false,
-            err_quiet: false,
+            stdout: false,     // true makes complexOutput false, noFrames true
+            zoom: 1.5,         // max 3.0, min 0.5; 1 = 72dpi
+            xml_output: false, // true makes complexOutput true, singlePage false, noFrames true, noMergeParagraph true
+            no_rounded_coordinates: false, // xml only
+            extract_hidden: false,
+            no_merge_paragraph: false,
+            output_encoding: "", // defaults to "UTF-8" and seems to support UTF-16, Latin1, ASCII7, Symbol, ZapfDingbats, (UCS-4?)
+            image_format: "png", // png, jpg (default png)
+            print_version_info: false,
+            owner_password: "", // max 32 characters
+            user_password: "",  // max 32 characters
             no_drm: false,
-            word_break_threshold: 0.1,
-            show_hidden: false,
-            no_merge: false,
+            word_break_threshold: 10.0, // default 10.0 (10%)
             font_full_name: false,
-            owner_password: String::new(),
-            user_password: String::new(),
-            print_version: false,
-            text_enc_name: String::new(),
         }
     }
 }
 
-pub trait AsPath {
-    fn as_path(&self) -> &Path;
+pub fn pdf_to_html(
+    file: PopplerFile,
+    options: PdfToHtmlConfig<'static>,
+) -> impl Future<Output = Result<String, &'static str>> {
+    let parsed_options = parse_options(&options);
+
+    // return the non-awaited future
+    run_program(file, "pdftohtml", parsed_options)
 }
 
-impl AsPath for Path {
-    fn as_path(&self) -> &Path {
-        self
-    }
-}
-
-impl AsPath for &str {
-    fn as_path(&self) -> &Path {
-        Path::new(self)
-    }
-}
-
-#[allow(dead_code)]
-pub fn pdf_to_html<T: AsPath>(file_location: T, options: PdfToHtmlConfig) -> () {
-    // get the proper executable for the current operating system (ELF, Mach-O, PE)
-    let os = std::env::consts::OS;
-
-    // determine which of 3 executable folders to use
-    let path_to_executable = match os {
-        "windows" => "src/poppler/win/bin/pdftohtml.exe",
-        "macos" => "src/poppler/mac/bin/pdftohtml",
-        "ios" => "src/poppler/mac/bin/pdftohtml",
-        _ => "src/poppler/unix/bin/pdftohtml",
-    };
-
-    // get absolute path of this root directory
-    let root = std::env::current_dir().unwrap();
-    let exe_path = root.join(path_to_executable.as_path());
-
-    // TODO: if file_location is undefined and not a valid pdf file then error and return
-    //let data = std::fs::read(&file_location.as_path());
-
-    let parsed_options = parse_options(&file_location.as_path(), &options);
-
-    let mut handle = Command::new(exe_path);
-    //handle.args(parsed_options);
-    handle.arg("-h");
-    let result = handle.output();
-
-    if result.is_ok() {
-        let output = result.unwrap();
-        match String::from_utf8(output.stderr) {
-            Ok(stderr) => println!("Execution was successful: {}", stderr),
-            Err(e) => println!("Invalid UTF-8 sequence: {}", e),
-        }
-        println!("parsed_options: {:?}", parsed_options);
-    } else {
-        println!("error: {}", result.err().unwrap());
-    }
-}
-
-fn parse_options(file_location: &Path, options: &PdfToHtmlConfig) -> Vec<String> {
+fn parse_options(options: &PdfToHtmlConfig) -> Vec<String> {
     let mut parsed_options = Vec::new();
 
     macro_rules! add_option {
@@ -132,65 +85,54 @@ fn parse_options(file_location: &Path, options: &PdfToHtmlConfig) -> Vec<String>
             }
         };
     }
-    add_option!(file_location.exists(), file_location.to_str().unwrap());
     add_option!(
-        options.first_page != 1,
-        format!("-f {}", options.first_page)
+        options.first_page_to_convert != 1,
+        format!("-f {}", options.first_page_to_convert)
     );
-    add_option!(options.last_page != 0, format!("-l {}", options.last_page));
+    add_option!(
+        options.last_page_to_convert != 0,
+        format!("-l {}", options.last_page_to_convert)
+    );
+    add_option!(options.quiet, "-q");
+    add_option!(options.exchange_pdf_links, "-p");
+    add_option!(options.single_page, "-s");
     add_option!(options.raw_order, "-raw");
     add_option!(options.print_commands, "-c");
     add_option!(options.print_help, "-h");
-    add_option!(options.print_html, "-s");
-    add_option!(options.complex_mode, "-c");
-    add_option!(options.single_html, "-s");
+    add_option!(options.complex_output, "-c");
     add_option!(options.data_urls, "-dataurls");
-    add_option!(options.ignore, "-i");
+    add_option!(options.ignore_images, "-i");
     add_option!(
-        options.extension != "png",
-        format!("-fmt {}", options.extension)
+        options.image_format != "png",
+        format!("-fmt {}", options.image_format)
     );
-    add_option!(options.scale != 1.5, format!("-zoom {}", options.scale));
+    add_option!(options.zoom != 1.5, format!("-zoom {}", options.zoom));
     add_option!(options.no_frames, "-noframes");
-    add_option!(options.stout, "-stdout");
-    add_option!(options.xml, "-xml");
+    add_option!(options.stdout, "-stdout");
+    add_option!(options.xml_output, "-xml");
     add_option!(options.no_rounded_coordinates, "-noroundcoord");
-    add_option!(options.err_quiet, "-q");
+    add_option!(options.extract_hidden, "-hidden");
+    add_option!(options.no_merge_paragraph, "-nomerge");
+    add_option!(
+        !options.output_encoding.is_empty(),
+        format!("-enc {}", options.output_encoding)
+    );
+    add_option!(options.print_version_info, "-v");
+    add_option!(
+        !options.owner_password.is_empty(),
+        format!("-opw {}", options.owner_password)
+    );
+    add_option!(
+        !options.user_password.is_empty(),
+        format!("-upw {}", options.user_password)
+    );
     add_option!(options.no_drm, "-nodrm");
     add_option!(
-        options.word_break_threshold != 0.1,
+        options.word_break_threshold != 10.0,
         format!("-wbt {}", options.word_break_threshold)
     );
-    add_option!(options.show_hidden, "-hidden");
-    add_option!(options.no_merge, "-nomerge");
     add_option!(options.font_full_name, "-fontfullname");
-
-    // first_page: 1,
-    // last_page: 0,
-    // raw_order: true,
-    // print_commands: true,
-    // print_help: false,
-    // print_html: false,
-    // complex_mode: false,
-    // single_html: false,
-    // data_urls: false,
-    // ignore: false,
-    // extension: String::from("png"),
-    // scale: 1.5,
-    // no_frames: false,
-    // stout: false,
-    // xml: false,
-    // no_rounded_coordinates: false,
-    // err_quiet: false,
-    // no_drm: false,
-    // word_break_threshold: 0.1,
-    // show_hidden: false,
-    // no_merge: false,
-    // font_full_name: false,
-    // owner_password: String::new(),
-    // user_password: String::new(),
-    // print_version: false,
-    // text_enc_name: String::new(),
+    add_option!(!options.output_path.is_empty(), options.output_path);
 
     parsed_options
 }

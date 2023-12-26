@@ -4,22 +4,22 @@ Version 0.0.1
 
 Because we will not be accessing any of the front-end functionality of Poppler, we can build the library without the Qt5, Qt6, glib, or cpp wrappers.
 
-Download the source code from [poppler.freedesktop.org](https://poppler.freedesktop.org/) and place the files into "poppler-master."
+Download the source code from [poppler.freedesktop.org](https://poppler.freedesktop.org/) and extract to poppler-src.
 You will also be able to find poppler-data on the same site. These are the encoding files that enable poppler to correctly render CJK and Cyrillic.
 
 Assumes the following folder structure:
 
 - poppler-utils-rs
-  - poppler-cmake-toolchains
-    - mac.cmake
-    - unix.cmake
-    - win.cmake
-  - poppler-23.12.0
-    - poppler-master
+  - poppler-src
+    - poppler-23.12.0
       - build-win
       - build-test
       - build-mac
       - build-unix
+  - poppler-cmake-toolchains
+    - mac.cmake
+    - unix.cmake
+    - win.cmake
     - poppler-data-0.4.12
   - src
     - poppler
@@ -27,7 +27,7 @@ Assumes the following folder structure:
       - unix
       - win
 
-_**NOTE:** The poppler-test folder is not required for the build, but is useful for testing the library. It can be downloaded from the [Poppler repository](https://gitlab.freedesktop.org/poppler/test). Place the contents in poppler-master/build-test and run "make test"_
+_**NOTE:** The poppler-test folder is not required for the build, but is useful for testing the library. It can be downloaded from the [Poppler repository](https://gitlab.freedesktop.org/poppler/test). Place the contents in poppler-23.12.0/build-test and run "make test"_
 
 ---
 
@@ -88,18 +88,14 @@ The encoding files enables poppler to correctly render CJK and Cyrillic properly
 
 You will build the data encoding files to your computer. The way CMakeLists.txt is written, it is not easy to override the path and ensure a proper include if it is in the source directory.
 
-### for build-time
-
 ```bash
 # Navigate to the directory where you've downloaded the Poppler source code
-cd /path/to/root/poppler-23.12.0/poppler-data-0.4.12
+cd /path/to/root/poppler-src/poppler-data-0.4.12
 
 # Clean incase anything is left over from a previous build
 make clean
 
 # Install the data files in the source directory top level
-#make install datadir=/ pkgdatadir=/poppler/ DESTDIR=../poppler-master/data
-
 make install
 
 ```
@@ -135,7 +131,7 @@ _<sup>\*\*</sup> In this build, CURL and NSS are being disabled. Mingw-w64 does 
 # Close and reopen your terminal to make sure the new environment variables are loaded
 
 # Navigate to the directory where you've downloaded the Poppler source code
-cd /path/to/root/poppler-23.12.0/poppler-master
+cd /path/to/root/poppler-src/poppler-23.12.0
 
 # Create a new directory for the build
 mkdir build-win
@@ -181,7 +177,7 @@ Check the build directory to make sure all the files are .dll or .exe files. If 
 # Close and reopen your terminal to make sure the new environment variables are loaded
 
 # Navigate to the directory where you've downloaded the Poppler source code
-cd /path/to/root/poppler-23.12.0/poppler-master
+cd /path/to/root/poppler-src/poppler-23.12.0
 
 # Create a new directory for the build
 mkdir build-mac
@@ -246,7 +242,7 @@ Startup the dev container:
 
 ```bash
 # Navigate to the directory where you've downloaded the Poppler source code
-cd /path/to/root/poppler-23.12.0/poppler-master
+cd /path/to/root/poppler-src/poppler-23.12.0
 
 # Create a new directory for the build
 mkdir build-unix
@@ -298,7 +294,7 @@ Make sure to move back up to the build directory before running cmake. It is rec
 
 ```bash
 # back to the build directory
-cd /path/to/root/poppler-23.12.0/poppler-master/build-unix
+cd /path/to/root/poppler-src/poppler-23.12.0/build-unix
 
 # Clean incase anything is left over from a previous build
 make clean
