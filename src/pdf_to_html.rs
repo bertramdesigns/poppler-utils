@@ -68,7 +68,7 @@ impl<'a> Default for PdfToHtmlConfig<'a> {
 pub fn pdf_to_html(
     file: PopplerFile,
     options: PdfToHtmlConfig<'static>,
-) -> impl Future<Output = Result<String, &'static str>> {
+) -> impl Future<Output = Result<String, std::io::Error>> {
     let parsed_options = parse_options(&options);
 
     // return the non-awaited future

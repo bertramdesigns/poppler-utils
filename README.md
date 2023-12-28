@@ -21,18 +21,57 @@ Check out [Amos](fasterthanli.me) to see [documention](https://fasterthanli.me/s
 - [ ] Windows Poppler compile
 
 - [ ] pdfattach
+  - [ ] module
+  - [ ] tests
+  - [ ] docs
 - [ ] pdfdetach
+  - [ ] module
+  - [ ] tests
+  - [ ] docs
 - [ ] pdffonts
+  - [ ] module
+  - [ ] tests
+  - [ ] docs
 - [ ] pdfimages
+  - [ ] module
+  - [ ] tests
+  - [ ] docs
 - [ ] pdfinfo
+  - [x] module
+  - [-] tests
+  - [ ] docs
 - [ ] pdfseparate
+  - [ ] module
+  - [ ] tests
+  - [ ] docs
 - [ ] pdfsig
+  - [ ] module
+  - [ ] tests
+  - [ ] docs
 - [ ] pdftocairo
+  - [ ] module
+  - [ ] tests
+  - [ ] docs
 - [ ] pdftohtml
+  - [x] module
+  - [-] tests
+  - [-] docs
 - [ ] pdftoppm
+  - [ ] module
+  - [ ] tests
+  - [ ] docs
 - [ ] pdftops
+  - [ ] module
+  - [ ] tests
+  - [ ] docs
 - [ ] pdftotext
+  - [x] module
+  - [-] tests
+  - [ ] docs
 - [ ] pdfunite
+  - [ ] module
+  - [ ] tests
+  - [ ] docs
 
 ## Usage
 

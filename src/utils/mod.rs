@@ -15,7 +15,7 @@ pub struct PopplerFilePath {
 pub struct PopplerFileBuffer {
     buffer: Vec<u8>,
 }
-pub(crate) trait AsPopplerPath {
+pub trait AsPopplerPath {
     fn as_poppler_path(self) -> PopplerFile;
 }
 
@@ -49,7 +49,7 @@ impl AsPopplerPath for &Path {
     }
 }
 
-pub(crate) trait AsPopplerBuffer {
+pub trait AsPopplerBuffer {
     fn as_poppler_buffer(self) -> PopplerFile;
 }
 
@@ -63,13 +63,16 @@ pub(crate) async fn run_program(
     file: PopplerFile,
     prog_name: &str,
     parsed_options: Vec<String>,
-) -> Result<String, &str> {
+) -> Result<String, std::io::Error> {
     let exe_path = get_path_to_executable(prog_name);
 
     // error if there is not a valid path to the executable.
     // Check the hard coded folder structures.
     if let Err(_) = exe_path {
-        return Err("Failed to get_path_to_executable");
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::Other,
+            "Failed to get_path_to_executable",
+        ));
     }
 
     let mut handle = Command::new(exe_path.unwrap());
@@ -99,9 +102,22 @@ pub(crate) async fn run_program(
             if let Some(mut stdin) = child.stdin.take() {
                 let stdin_handle = thread::spawn(move || stdin.write_all(&file_buffer.buffer));
                 // handle error if unable to write to stdin
-                if let Err(e) = stdin_handle.join() {
-                    eprintln!("Error: {:?}", e);
-                    return Err("Unable to write to stdin");
+                match stdin_handle.join() {
+                    Ok(Ok(())) => {
+                        // Everything is fine, continue with your code
+                    }
+                    Ok(Err(e)) => {
+                        // stdin.write_all(&file_buffer.buffer) returned an error
+                        eprintln!("Error: {:?}", e);
+                        return Err(e);
+                    }
+                    Err(_) => {
+                        // The child thread panicked
+                        let e =
+                            std::io::Error::new(std::io::ErrorKind::Other, "Child thread panicked");
+                        eprintln!("Error: {:?}", e);
+                        return Err(e);
+                    }
                 }
             }
         }
@@ -120,17 +136,23 @@ pub(crate) async fn run_program(
                 Ok(stdout)
             } else {
                 // we already printed stderr, so just return a generic error
-                Err("Poppler exited with an error")
+                Err(std::io::Error::new(std::io::ErrorKind::Other, stderr))
             }
         } else {
-            Err("Failed to wait for output from child process")
+            Err(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                "Failed to wait for output from child process",
+            ))
         }
     } else {
-        Err("Failed to spawn child process")
+        Err(std::io::Error::new(
+            std::io::ErrorKind::Other,
+            "Failed to spawn child process",
+        ))
     }
 }
 
-fn get_path_to_executable(prog_name: &str) -> Result<PathBuf, ()> {
+fn get_path_to_executable(prog_name: &str) -> Result<PathBuf, std::io::Error> {
     // get the proper executable for the current operating system (ELF, Mach-O, PE)
     let os = std::env::consts::OS;
 
@@ -146,12 +168,12 @@ fn get_path_to_executable(prog_name: &str) -> Result<PathBuf, ()> {
     match root {
         Ok(root) => {
             let exe_path = root.join(path_to_executable);
-            return Ok(exe_path);
+            Ok(exe_path)
         }
         Err(e) => {
             // return error: no permission to access current directory
             eprintln!("Error: {}", e);
-            return Err(());
+            Err(e)
         }
     }
 }

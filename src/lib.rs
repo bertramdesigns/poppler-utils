@@ -11,15 +11,16 @@ pub mod pdf_info;
 // pub mod pdf_to_cairo;
 // pub mod pdf_to_ppm;
 // pub mod pdf_to_ps;
-// pub mod pdf_to_text;
 pub mod pdf_to_html;
+pub mod pdf_to_text;
 // pub mod pdf_unite;
-pub(crate) mod utils;
+pub mod utils;
 
 #[cfg(test)]
 mod tests {
     use crate::pdf_info::{pdf_info, PdfInfoConfig};
     use crate::pdf_to_html::{pdf_to_html, PdfToHtmlConfig};
+    use crate::pdf_to_text::{pdf_to_text, PdfToTextConfig};
     use crate::utils::AsPopplerPath;
     use tokio::runtime::Builder;
 
@@ -61,6 +62,23 @@ mod tests {
             // config.print_help = true;
 
             let _result = pdf_to_html(file, config).await;
+
+            //assert_eq!(1, 4);
+        })
+    }
+
+    #[test]
+    fn pdf_to_text_works() {
+        run_test(async {
+            let mut file_path = std::env::current_dir().unwrap();
+            file_path.push("./src/test.pdf");
+            // println!("file_path: {:?}", file_path);
+
+            let file = file_path.as_poppler_path();
+            let config = PdfToTextConfig::default();
+            // config.print_help = true;
+
+            let _result = pdf_to_text(file, config).await;
 
             //assert_eq!(1, 4);
         })

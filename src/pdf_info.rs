@@ -50,7 +50,7 @@ impl<'a> Default for PdfInfoConfig<'a> {
 pub fn pdf_info(
     file: PopplerFile,
     options: PdfInfoConfig<'static>,
-) -> impl Future<Output = Result<String, &'static str>> {
+) -> impl Future<Output = Result<String, std::io::Error>> {
     let parsed_options = parse_options(&options);
 
     // return the non-awaited future
