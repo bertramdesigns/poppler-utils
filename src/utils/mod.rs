@@ -9,11 +9,11 @@ pub enum PopplerFile {
     Buffer(PopplerFileBuffer),
 }
 pub struct PopplerFilePath {
-    path: PathBuf,
+    pub path: PathBuf,
 }
 
 pub struct PopplerFileBuffer {
-    buffer: Vec<u8>,
+    pub buffer: Vec<u8>,
 }
 pub trait AsPopplerPath {
     fn as_poppler_path(self) -> PopplerFile;

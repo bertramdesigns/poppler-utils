@@ -33,7 +33,7 @@ Check out [Amos](fasterthanli.me) to see [documention](https://fasterthanli.me/s
   - [ ] tests
   - [ ] docs
 - [ ] pdfimages
-  - [ ] module
+  - [x] module
   - [ ] tests
   - [ ] docs
 - [ ] pdfinfo
@@ -41,7 +41,7 @@ Check out [Amos](fasterthanli.me) to see [documention](https://fasterthanli.me/s
   - [-] tests
   - [ ] docs
 - [ ] pdfseparate
-  - [ ] module
+  - [x] module
   - [ ] tests
   - [ ] docs
 - [ ] pdfsig
@@ -69,9 +69,10 @@ Check out [Amos](fasterthanli.me) to see [documention](https://fasterthanli.me/s
   - [-] tests
   - [ ] docs
 - [ ] pdfunite
-  - [ ] module
+  - [-] module
+    - Needs additional testing
   - [ ] tests
-  - [ ] docs
+  - [-] docs
 
 ## Usage
 
@@ -87,5 +88,20 @@ Check out [Amos](fasterthanli.me) to see [documention](https://fasterthanli.me/s
         config.zoom = 1.5;
 
         poppler_utils::pdf_to_html(file, config);
+    }
+```
+
+### PDF Unite
+
+```rs
+    fn pdf_unite() {
+        let file_path_1: &str = "test1.pdf".as_poppler_path(); // can be Vec<u8>, &Path, PathBuf, &str, String
+        let file_path_2: &str = "test2.pdf".as_poppler_path(); // or as_poppler_buffer() for Vec<u8>
+        let files: Vec<PopplerFile> = [file_path_1, file_path_2];
+
+        // Uses builder pattern to set options
+        let config = poppler_utils::PdfUniteConfig::default();
+
+        poppler_utils::pdf_unite(files, config);
     }
 ```

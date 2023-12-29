@@ -4,16 +4,16 @@
 // pub mod pdf_attach;
 // pub mod pdf_detach;
 // pub mod pdf_fonts;
-// pub mod pdf_images;
+pub mod pdf_images;
 pub mod pdf_info;
-// pub mod pdf_separate;
+pub mod pdf_separate;
 // pub mod pdf_sig;
 // pub mod pdf_to_cairo;
 // pub mod pdf_to_ppm;
 // pub mod pdf_to_ps;
 pub mod pdf_to_html;
 pub mod pdf_to_text;
-// pub mod pdf_unite;
+pub mod pdf_unite;
 pub mod utils;
 
 #[cfg(test)]
